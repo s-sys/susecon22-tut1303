@@ -37,14 +37,16 @@ class SuseManager:
     def get_device_id(self, device_name):
         return self.exec('system', 'getId', (device_name,))[0]['id']
 
-    def get_package_ids(self, package_name, package_version=None):
+    def get_package_ids(self, device_id, package_name, package_version):
         packages = []
-        if package_version is None:
-            results = self.exec('packages.search', 'name', (package_name,))
-        else:
-            query = 'name:{0} AND version:{1}'.format(package_name, package_version)
-            results = self.exec('packages.search', 'advanced', (query,))
-        for package in results:
-            if package['name'] == package_name and (package_version is None or package['version'] == package_version):
+        for package in self.exec('system', 'listAllInstallablePackages', (device_id,)):
+            if package['name'] == package_name and package['version'] == package_version:
                 packages.append(package['id'])
+        return packages
+
+    def get_installed_package_ids(self, device_id, package_name):
+        packages = []
+        for package in self.exec('system', 'listInstalledPackages', (device_id,)):
+            if package['name'] == package_name:
+                packages.append(package['package_id'])
         return packages

@@ -497,15 +497,17 @@ def sync_devices_thread():
                 for device_name, package_name, package_version in package_requests:
                     try:
                         device_id = susemanager.get_device_id(device_name)
-                        package_ids = susemanager.get_package_ids(package_name, package_version)
-                        request_args = (device_id, package_ids, datetime.datetime.now())
                         if package_version:
                             log.info('Sync Devices: Requesting installation of package %s at version %s on device %s '
                                      'from SUSE Manager.', package_name, package_version, device_name)
+                            package_ids = susemanager.get_package_ids(device_id, package_name, package_version)
+                            request_args = (device_id, package_ids[:1], datetime.datetime.now())
                             action_id = susemanager.exec('system', 'schedulePackageInstall', request_args)
                         else:
                             log.info('Sync Devices: Requesting removal of package %s on device %s from SUSE Manager.',
                                      package_name, device_name)
+                            package_ids = susemanager.get_installed_package_ids(device_id, package_name)
+                            request_args = (device_id, package_ids[:1], datetime.datetime.now())
                             action_id = susemanager.exec('system', 'schedulePackageRemove', request_args)
                         if action_id is None:
                             log.error('Sync Devices: Empty response while requesting package management action for '

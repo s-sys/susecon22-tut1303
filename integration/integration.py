@@ -498,15 +498,19 @@ def sync_devices_thread():
                     try:
                         device_id = susemanager.get_device_id(device_name)
                         if package_version:
+                            package_ids = susemanager.get_package_ids(device_id, package_name, package_version)
+                            if not package_ids:
+                                continue
                             log.info('Sync Devices: Requesting installation of package %s at version %s on device %s '
                                      'from SUSE Manager.', package_name, package_version, device_name)
-                            package_ids = susemanager.get_package_ids(device_id, package_name, package_version)
                             request_args = (device_id, package_ids[:1], datetime.datetime.now())
                             action_id = susemanager.exec('system', 'schedulePackageInstall', request_args)
                         else:
+                            package_ids = susemanager.get_installed_package_ids(device_id, package_name)
+                            if not package_ids:
+                                continue
                             log.info('Sync Devices: Requesting removal of package %s on device %s from SUSE Manager.',
                                      package_name, device_name)
-                            package_ids = susemanager.get_installed_package_ids(device_id, package_name)
                             request_args = (device_id, package_ids[:1], datetime.datetime.now())
                             action_id = susemanager.exec('system', 'schedulePackageRemove', request_args)
                         if action_id is None:
